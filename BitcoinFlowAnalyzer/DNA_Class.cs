@@ -7,7 +7,7 @@ using IDdatatype = System.Int32;
 
 namespace BitcoinFlowAnalyzer
 {
-    class DNA_Class
+    public class DNA_Class
     {
         IDdatatype dnaID;
         decimal amount;
@@ -16,7 +16,8 @@ namespace BitcoinFlowAnalyzer
         internal IDdatatype DNAID { get => dnaID; }
         internal decimal Amount { get => amount; set => amount = value; }
         internal decimal Percent { get => percent; set => percent = value; }
-        internal const IDdatatype coinbaseDNAID = 0;
+        internal const IDdatatype colorlessDNAID = 0;
+        //internal const IDdatatype coinbaseDNAID = 0;
         internal const IDdatatype mtgoxDNAID = 1;
 
         //未给出percent属性的构造

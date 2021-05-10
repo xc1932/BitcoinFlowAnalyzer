@@ -7,7 +7,7 @@ using IDdatatype = System.Int32;
 
 namespace BitcoinFlowAnalyzer
 {
-    class Coin_Class
+    public class Coin_Class
     {
         decimal amount;
         SortedDictionary<IDdatatype, DNA_Class> geneDictionary;
@@ -15,7 +15,7 @@ namespace BitcoinFlowAnalyzer
         internal decimal Amount { get => amount; set => amount = value; }
         internal SortedDictionary<IDdatatype, DNA_Class> GeneDictionary { get => geneDictionary; }
 
-        //常规初始化一个币
+        //常规初始化一个币(构造地址时初始化的空币)
         internal Coin_Class(decimal amount)
         {
             this.amount = amount;
@@ -36,7 +36,8 @@ namespace BitcoinFlowAnalyzer
         }
 
         //@@@2.币的分割操作，返回分割出去的币@@@
-        internal static Coin_Class splitCoin(Coin_Class originalCoin, decimal splitedAmount)//币的分割产生新的币，原来的币根据剩余数量判断是否存在，如果分割后还有剩余，则原来的币还有用
+        //币的分割产生新的币，原来的币根据剩余数量判断是否存在，如果分割后还有剩余，则原来的币还有用
+        internal static Coin_Class splitCoin(Coin_Class originalCoin, decimal splitedAmount)
         {
             if (splitedAmount > originalCoin.amount)
             {
@@ -69,7 +70,7 @@ namespace BitcoinFlowAnalyzer
         }
 
         ////II.币的融合
-        //@@@1.币的融合操作，destinationCoin为融合后的新币@@@
+        //@@@1.币的融合操作，destinationCoin为融合后的新币@@@       
         internal static void mixCoin(Coin_Class originalCoin, Coin_Class destinationCoin,bool resetDestinationCoinGenes = true)
         {
             destinationCoin.amount += originalCoin.amount;
