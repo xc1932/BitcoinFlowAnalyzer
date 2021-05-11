@@ -23,7 +23,9 @@ namespace BitcoinUTXOSlicer
         //新加入成员
         string UtxoSliceFilePath = @".\";                       //utxo切片文件存储路径
         string OpReturnFilePath = null;                         //opreturn文件存储路径
+        string AddressBalanceFilePath = null;                   //addressBalance文件存储路径
         string UtxoSliceFileName = null;                        //utxo切片恢复文件名
+        string AddressBalanceFileName = null;                   //addressBalance恢复文件名
         string sliceIntervalTimeType;                           //切片间隔类型(year month day)
         int sliceIntervalTime;                                  //切片间隔长度       
         DateTime endTime = DateTime.MaxValue;                   //时间中止条件
@@ -42,6 +44,9 @@ namespace BitcoinUTXOSlicer
         public Int64 nextOpreturnOutputID;
         public ParserBlock nextParserBlock;
         string sqlConnectionString = null;
+        //地址余额字典
+        public Dictionary<string, decimal> addressBalanceDic = new Dictionary<string, decimal>();
+        AddressParser_Class addressParser = new AddressParser_Class();
 
         public BitcoinUTXOSlicer_Class() { }
         //不带写库功能的构造
@@ -107,6 +112,8 @@ namespace BitcoinUTXOSlicer
             restore_SliceUTXO_Table();
         }
 
+        //新的构造(@@@@@@@@@新增@@@@@@@@@)
+
         ////I.****切片程序运行相关函数****
         //----1.获取下一个区块(新增)----
         public ParserBlock get_NextParserBlock()
@@ -147,7 +154,7 @@ namespace BitcoinUTXOSlicer
             return true;
         }
 
-        //b.执行铸币交易(更新)
+        //b.执行铸币交易(@@@@@@@@@更新@@@@@@@@@)
         public void execute_CoinbaseTransaction(Transaction transaction)
         {
             //Console.WriteLine("交易Hash："+transaction.GetHash());
@@ -165,6 +172,21 @@ namespace BitcoinUTXOSlicer
                 }
                 else
                 {
+                    //1.更新地址余额
+                    bool isNonStandardPayment;
+                    string outputAddress = addressParser.extractAddressFromScript(transactionOutput.ScriptPubKey.ToBytes(), 0x00, out isNonStandardPayment);
+                    if (outputAddress != null)
+                    {
+                        if (!addressBalanceDic.ContainsKey(outputAddress))
+                        {
+                            addressBalanceDic.Add(outputAddress, value);
+                        }
+                        else
+                        {
+                            addressBalanceDic[outputAddress] += value;
+                        }
+                    }
+                    //2.更新UTXO
                     UTXOItem_Class unSpentTxOutItem = new UTXOItem_Class(txhash, indexOfOutput, value, script);//可以放在if里面                        
                     if (!utxoDictionary.ContainsKey(txhashAndIndex))
                     {
@@ -177,13 +199,13 @@ namespace BitcoinUTXOSlicer
                         utxoDictionary[txhashAndIndex].utxoItemAmount++;
                         sameTransactionCount++;
                     }
-                    nextTxOutputID++;
+                    nextTxOutputID++;                                 
                 }
                 indexOfOutput++;
             }
         }
 
-        //c.执行常规交易(更新)
+        //c.执行常规交易(@@@@@@@@@更新@@@@@@@@@)
         public void execute_RegularTransaction(Transaction transaction)
         {
             foreach (TxIn transactionInput in transaction.Inputs)
@@ -191,6 +213,22 @@ namespace BitcoinUTXOSlicer
                 string sourceTxhashAndIndex = transactionInput.PrevOut.ToString();
                 if (utxoDictionary.ContainsKey(sourceTxhashAndIndex))
                 {
+                    //1.更新地址余额
+                    bool isNonStandardPayment;
+                    byte[] scriptByteArray = addressParser.scriptStrToByteArray(utxoDictionary[sourceTxhashAndIndex].script);
+                    string sourceOutputAddress = addressParser.extractAddressFromScript(scriptByteArray, 0x00, out isNonStandardPayment);
+                    if (sourceOutputAddress != null)
+                    {
+                        if (!addressBalanceDic.ContainsKey(sourceOutputAddress))
+                        {
+                            Console.WriteLine("地址余额更新出错!!!");
+                        }
+                        else
+                        {
+                            addressBalanceDic[sourceOutputAddress] -= utxoDictionary[sourceTxhashAndIndex].value;
+                        }
+                    }
+                    //2.更新UTXO
                     if (utxoDictionary[sourceTxhashAndIndex].utxoItemAmount > 1)
                     {
                         utxoDictionary[sourceTxhashAndIndex].utxoItemAmount--;
@@ -199,8 +237,7 @@ namespace BitcoinUTXOSlicer
                     else
                     {
                         utxoDictionary.Remove(sourceTxhashAndIndex);
-                    }
-
+                    }                    
                 }
                 else
                 {
@@ -222,6 +259,21 @@ namespace BitcoinUTXOSlicer
                 }
                 else
                 {
+                    //1.更新地址余额
+                    bool isNonStandardPayment;
+                    string outputAddress = addressParser.extractAddressFromScript(transactionOutput.ScriptPubKey.ToBytes(), 0x00, out isNonStandardPayment);
+                    if (outputAddress != null)
+                    {
+                        if (!addressBalanceDic.ContainsKey(outputAddress))
+                        {
+                            addressBalanceDic.Add(outputAddress, value);
+                        }
+                        else
+                        {
+                            addressBalanceDic[outputAddress] += value;
+                        }
+                    }
+                    //2.更新UTXO
                     UTXOItem_Class unSpentTxOutItem = new UTXOItem_Class(txhash, indexOfOutput, value, script);//可以放在if里面                        
                     if (!utxoDictionary.ContainsKey(txhashAndIndex))
                     {
@@ -235,6 +287,7 @@ namespace BitcoinUTXOSlicer
                         sameTransactionCount++;
                     }
                     nextTxOutputID++;
+                    
                 }
                 indexOfOutput++;
             }
@@ -283,7 +336,19 @@ namespace BitcoinUTXOSlicer
             opreturnOutputLinkedList = new LinkedList<opreturnOutputItem_Class>();
         }
 
-        //c.切片条件判断函数
+        //c.保存地址余额状态(@@@@@@@@@新增@@@@@@@@@)
+        public void save_addressBalanceDicFile(int processedBlockAmount, DateTime endBlockTime)
+        { 
+            string AddressBalanceFileFinalPath= Path.Combine(AddressBalanceFilePath, "AddressBalance_" + processedBlockAmount + "_" + endBlockTime.ToString("yyyy年MM月dd日HH时mm分ss秒") + ".dat");
+            using (StreamWriter sw = File.CreateText(AddressBalanceFileFinalPath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Serialize(sw, addressBalanceDic);
+            }
+            orderedBlockchainParser.Compress(AddressBalanceFileFinalPath, true);
+        }
+
+        //d.切片条件判断函数
         public bool endConditionJudgment(DateTime newlyRecentlyDatetime, DateTime recentlyBlockDatetime)
         {
             TimeSpan timeSpan = recentlyBlockDatetime - newlyRecentlyDatetime;
@@ -360,6 +425,41 @@ namespace BitcoinUTXOSlicer
                 recentlySliceDateTime = nextParserBlock.Header.BlockTime.DateTime;
             }
         }
+        //(@@@@@@@@@新增@@@@@@@@@)
+        public void save_AllProgramContextFileWithoutDB(Int64 nextBlockID)
+        {
+            if (endConditionJudgment(recentlySliceDateTime, nextParserBlock.Header.BlockTime.DateTime))
+            {
+                sliceFileAmount++;
+                //1.保存切片状态
+                Console.WriteLine("正在保存第" + sliceFileAmount + "个切片状态,请勿现在终止程序..........");
+                Stopwatch sw1 = new Stopwatch();
+                sw1.Start();
+                save_SliceFile(orderedBlockchainParser.processedBlockAmount, sliceFileAmount, nextParserBlock.Header.BlockTime.DateTime);
+                sw1.Stop();
+                Console.WriteLine("UTXO切片保存完成");
+                Console.WriteLine("保存第" + sliceFileAmount + "个切片用时:" + sw1.Elapsed);
+                //2.保存上下文状态
+                Console.WriteLine("正在保存第" + sliceFileAmount + "个程序上下文状态,请勿现在终止程序..........");
+                orderedBlockchainParser.saveBlockProcessContext();
+                Console.WriteLine("程序上下文保存完成");
+                //3.保存opreturn切片
+                if (OpReturnFilePath != null)
+                {
+                    Console.WriteLine("正在保存第" + sliceFileAmount + "个opreturn切片状态,请勿现在终止程序..........");
+                    save_opreturnOutputsFile(orderedBlockchainParser.processedBlockAmount, nextParserBlock.Header.BlockTime.DateTime);
+                    Console.WriteLine("opreturn切片保存完成");
+                }
+                //4.保存地址余额状态
+                Console.WriteLine("正在保存第" + sliceFileAmount + "个地址余额状态,请勿现在终止程序..........");
+                Stopwatch sw2 = new Stopwatch();
+                sw2.Start();
+                save_addressBalanceDicFile(orderedBlockchainParser.processedBlockAmount, nextParserBlock.Header.BlockTime.DateTime);
+                sw2.Stop();
+                Console.WriteLine("保存第" + sliceFileAmount + "个地址余额状态用时:" + sw2.Elapsed);
+                recentlySliceDateTime = nextParserBlock.Header.BlockTime.DateTime;
+            }
+        }
 
         //----6.终止条件判断(新增)----
         public bool terminationConditionJudment()
@@ -431,7 +531,52 @@ namespace BitcoinUTXOSlicer
             }
         }
 
-        //----8.参数检测----
+        //----8.恢复地址余额上下文----(@@@@@@@@@新增@@@@@@@@@)
+        public void restore_AddressBalanceContextForProgram()
+        {
+            string addressBalanceContextFileFinalPath = Path.Combine(AddressBalanceFilePath, AddressBalanceFileName);
+            //判断给定文件名是压缩文件还是txt文件
+            FileInfo fileName = new FileInfo(addressBalanceContextFileFinalPath);
+            if (fileName.Extension == ".rar")
+            {
+                Console.WriteLine("正在解压AddressBalance下文状态文件......");
+                orderedBlockchainParser.Decompress(addressBalanceContextFileFinalPath, false);
+                addressBalanceContextFileFinalPath = Path.Combine(AddressBalanceFilePath, Path.GetFileNameWithoutExtension(addressBalanceContextFileFinalPath));
+            }
+            if (File.Exists(addressBalanceContextFileFinalPath))
+            {
+                //1.反序列化AddressBalance文件
+                Console.WriteLine("开始提取程序上下文状态文件数据(AddressBalance).........");
+                Dictionary<string, decimal> addressBalanceFileObject = null;
+                Stopwatch timer = new Stopwatch();
+                timer.Start();
+                try
+                {
+                    using (StreamReader sr = File.OpenText(addressBalanceContextFileFinalPath))
+                    {
+                        JsonSerializer jsonSerializer = new JsonSerializer();
+                        addressBalanceFileObject = jsonSerializer.Deserialize(sr, typeof(Dictionary<string, decimal>)) as Dictionary<string, decimal>;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    Console.WriteLine("AddressBalance文件保存不完整或已经损坏。该错误可能是由于在保存AddressBalance文件时提前终止程序造成的，或是人为修改了最近的AddressBalance文件。");
+                }
+                timer.Stop();
+                Console.WriteLine("提取结束,反序列化切片用时:" + timer.Elapsed);
+                //恢复地址余额字典
+                addressBalanceDic = addressBalanceFileObject;
+                File.Delete(addressBalanceContextFileFinalPath);//删除解压后的文件AddressBalance文件
+                Console.WriteLine("AddressBalance上下文状态恢复成功.........");
+            }
+            else
+            {
+                Console.WriteLine(addressBalanceContextFileFinalPath + " 文件不存在!!!");
+            }
+        }
+
+        //----9.参数检测----
         public void parameter_Detection()
         {
             bool success = true;
@@ -506,7 +651,7 @@ namespace BitcoinUTXOSlicer
             }
         }
 
-        //----9.判断opreturn----
+        //----10.判断opreturn----
         public bool isOpreturn(TxOut txOut)
         {
             bool opreturnMark = false;

@@ -10,20 +10,20 @@ namespace BitcoinFlowAnalyzerTest
     {
         static void Main(string[] args)
         {
-            //string suspectAddressPath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
-            //BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressPath);
+            string suspectAddressPath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
+            BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressPath);
 
 
-            OrderedBitcoinBlockchainParser_Class orderedBitcoinBlockchainParser = new OrderedBitcoinBlockchainParser_Class(@"F:\data\blocks", @"F:\writedatabase\blockProcessContextFileForDatabase", null);
-            ParserBlock parserBlock = orderedBitcoinBlockchainParser.getNextBlock();
-            int len = parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToBytes().Length;
-            Console.WriteLine(parserBlock.Transactions[0].Outputs[0].ScriptPubKey);
-            Console.WriteLine(parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToString());
-            string script = new ByteArray(parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToBytes()).ToString();
-            Console.WriteLine("script:\t\t"+script);
-            byte[] byteArray = Org.BouncyCastle.Utilities.Encoders.Hex.Decode(script);
-            string script2 = new ByteArray(byteArray).ToString();
-            Console.WriteLine("script2:\t"+script2);
+            //OrderedBitcoinBlockchainParser_Class orderedBitcoinBlockchainParser = new OrderedBitcoinBlockchainParser_Class(@"F:\data\blocks", @"F:\writedatabase\blockProcessContextFileForDatabase", null);
+            //ParserBlock parserBlock = orderedBitcoinBlockchainParser.getNextBlock();
+            //int len = parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToBytes().Length;
+            //Console.WriteLine(parserBlock.Transactions[0].Outputs[0].ScriptPubKey);
+            //Console.WriteLine(parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToString());
+            //string script = new ByteArray(parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToBytes()).ToString();
+            //Console.WriteLine("script:\t\t"+script);
+            //byte[] byteArray = Org.BouncyCastle.Utilities.Encoders.Hex.Decode(script);
+            //string script2 = new ByteArray(byteArray).ToString();
+            //Console.WriteLine("script2:\t"+script2);
             //byte[] b1= parserBlock.Transactions[0].Outputs[0].ScriptPubKey.ToBytes();
             //Console.WriteLine();
             //Console.WriteLine(parserBlock.Transactions[0].Outputs[0].ScriptPubKey.PaymentScript);

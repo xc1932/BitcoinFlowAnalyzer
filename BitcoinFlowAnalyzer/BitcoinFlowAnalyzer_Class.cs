@@ -22,6 +22,18 @@ namespace BitcoinFlowAnalyzer
 
         public BitcoinFlowAnalyzer_Class() { }
 
+        public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath) 
+        {
+            //1.加载可疑地址
+            Stopwatch timer1 = new Stopwatch();
+            timer1.Start();
+            suspectAddressCluster = loadSuspectAddressTodyingPoolingDic(suspectAddressStorePath);
+            timer1.Stop();
+            Console.WriteLine("可以地址数量:" + suspectAddressCluster.Count);
+            Console.WriteLine("染色池字典地址数量:" + dyingPoolingDic.Count);
+            Console.WriteLine("加载可疑地址用时:" + timer1.Elapsed);
+        }
+
         public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, string UtxoSliceFilePath,
             string UtxoSliceFileName, string OpReturnFilePath, string sliceIntervalTimeType, int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
         {
@@ -41,6 +53,7 @@ namespace BitcoinFlowAnalyzer
             //restore_DatabaseForBlockParserTable();
         }
 
+        //I.染色地址加载和染色池字典初始化
         //1.获取聚类的可疑地址(单公司版)
         public HashSet<string> loadSuspectAddressTodyingPoolingDic(string path)
         {
@@ -72,6 +85,7 @@ namespace BitcoinFlowAnalyzer
             return suspectAddressCluster;
         }
 
+        //II.交易追踪
         //2.判断opreturn输出
         public bool isOpreturn(TxOut txOut)
         {
@@ -202,19 +216,6 @@ namespace BitcoinFlowAnalyzer
             return false;
         }        
 
-        //币的融合
-        public Coin_Class mixCoins(TxInList txIns) 
-        {
-            Coin_Class mixedCoin = new Coin_Class(0);
-
-            return mixedCoin;
-        }
-
-        public void distributeMixedCoin(Coin_Class mixedCoin, TxOutList txOuts)
-        { 
-            
-        }
-
         //判断脚本对应地址是否为可疑地址
         public bool isSuspectedAddress(string scriptStr,out string suspectAddress)
         {
@@ -242,7 +243,7 @@ namespace BitcoinFlowAnalyzer
         }
 
         //铸币交易追踪
-        //当输出中有可疑地址时执行该函数
+        //当输出中有可疑地址时才执行该函数
         public void traceCoinbaseTransaction(Transaction transaction)
         {
             foreach (TxOut txOut in transaction.Outputs)
@@ -269,6 +270,7 @@ namespace BitcoinFlowAnalyzer
         }
 
         //常规交易追踪
+        //当前输入或输出中有可疑地址时才执行该函数
         public void traceRegularTransaction(Transaction transaction)
         {
             //融合输入上的币
@@ -370,6 +372,8 @@ namespace BitcoinFlowAnalyzer
                 }
             }
         }
+
+        //III.追踪结果保存(写库saveToDatabase)
 
         public void run()
         { 
