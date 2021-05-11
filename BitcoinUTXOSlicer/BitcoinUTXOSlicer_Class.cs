@@ -113,6 +113,37 @@ namespace BitcoinUTXOSlicer
         }
 
         //新的构造(@@@@@@@@@新增@@@@@@@@@)
+        public BitcoinUTXOSlicer_Class(string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName,
+                                string UtxoSliceFilePath, string UtxoSliceFileName, string OpReturnFilePath,string AddressBalanceFilePath, string AddressBalanceFileName,
+                                string sliceIntervalTimeType, int sliceIntervalTime, DateTime endTime, int endBlockHeight) 
+        {
+            this.blockchainFilePath = blockchainFilePath;                   //区块链文件路径
+            this.blockProcessContextFilePath = blockProcessContextFilePath; //区块解析上下文文件存储路径
+            this.blockProcessContextFileName = blockProcessContextFileName; //区块解析上下文恢复文件名
+            this.AddressBalanceFilePath = AddressBalanceFilePath;           //地址余额文件路径
+            this.AddressBalanceFileName = AddressBalanceFileName;           //地址余额恢复文件名
+            this.UtxoSliceFilePath = UtxoSliceFilePath;                     //utxo切片文件存储路径
+            this.UtxoSliceFileName = UtxoSliceFileName;                     //utxo切片恢复文件名
+            this.OpReturnFilePath = OpReturnFilePath;                       //opreturn文件存储路径
+            this.sliceIntervalTimeType = sliceIntervalTimeType;             //切片间隔类型
+            this.sliceIntervalTime = sliceIntervalTime;                     //切片间隔长度            
+            this.endTime = endTime;                                         //时间中止条件
+            this.endBlockHeight = endBlockHeight;                           //区块高度终止条件
+            parameter_Detection();                                          //参数检查
+
+            if (UtxoSliceFileName == null || blockProcessContextFileName == null || AddressBalanceFileName==null)
+            { //从第0个块开始
+                orderedBlockchainParser = new OrderedBitcoinBlockchainParser_Class(blockchainFilePath, blockProcessContextFilePath, null);
+                recentlySliceDateTime = orderedBlockchainParser.recentlySliceDateTime;
+            }
+            else
+            { //从中断处恢复
+                orderedBlockchainParser = new OrderedBitcoinBlockchainParser_Class(blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName);
+                recentlySliceDateTime = orderedBlockchainParser.recentlySliceDateTime;
+                restore_UTXOSlicerContextForProgram();
+                restore_AddressBalanceContextForProgram();
+            }
+        }       
 
         ////I.****切片程序运行相关函数****
         //----1.获取下一个区块(新增)----
@@ -394,7 +425,7 @@ namespace BitcoinUTXOSlicer
             }
         }
 
-        //----5.保存BPC和UTXOSlice文件(新增)----
+        //----5.保存BPC和UTXOSlice文件(@@@@@@@@@本项目不使用@@@@@@@@@)----
         public void save_AllProgramContextFile(Int64 nextBlockID)
         {
             if (endConditionJudgment(recentlySliceDateTime, nextParserBlock.Header.BlockTime.DateTime))
@@ -576,10 +607,11 @@ namespace BitcoinUTXOSlicer
             }
         }
 
-        //----9.参数检测----
+        //----9.参数检测----(@@@@@@@@@更新@@@@@@@@@)
         public void parameter_Detection()
         {
             bool success = true;
+            //1.区块处理程序参数检查
             if (!Directory.Exists(blockchainFilePath))
             {
                 Console.WriteLine(blockchainFilePath + " 不存在!!!");
@@ -603,6 +635,7 @@ namespace BitcoinUTXOSlicer
                     success = false;
                 }
             }
+            //2.UTXO切片参数检查
             if (!Directory.Exists(UtxoSliceFilePath) && UtxoSliceFileName == null)
             {
                 Directory.CreateDirectory(UtxoSliceFilePath);
@@ -621,10 +654,31 @@ namespace BitcoinUTXOSlicer
                     success = false;
                 }
             }
+            //3.地址余额参数检查
+            if (!Directory.Exists(AddressBalanceFilePath) && AddressBalanceFileName == null)
+            {
+                Directory.CreateDirectory(AddressBalanceFilePath);
+            }
+            if (!Directory.Exists(AddressBalanceFilePath) && AddressBalanceFileName != null)
+            {
+                Console.WriteLine(AddressBalanceFilePath + "不存在或错误!!!");
+                success = false;
+            }
+            if (Directory.Exists(AddressBalanceFilePath) && AddressBalanceFileName != null)
+            {
+                string path = Path.Combine(AddressBalanceFilePath, AddressBalanceFileName);
+                if (!File.Exists(path))
+                {
+                    Console.WriteLine(path + " 不存在!!!");
+                    success = false;
+                }
+            }
+            //4.opreturn参数检查
             if (!Directory.Exists(OpReturnFilePath))
             {
                 Directory.CreateDirectory(OpReturnFilePath);
             }
+            //5.其它参数检查
             if (sliceIntervalTimeType != "year" && sliceIntervalTimeType != "month" && sliceIntervalTimeType != "day")
             {
                 Console.WriteLine("时间间隔类型参数错误(year/month/day)!!!");
@@ -651,7 +705,7 @@ namespace BitcoinUTXOSlicer
             }
         }
 
-        //----10.判断opreturn----
+        //----10.判断opreturn----(@@@@@@@@@更新@@@@@@@@@)
         public bool isOpreturn(TxOut txOut)
         {
             bool opreturnMark = false;
@@ -676,6 +730,8 @@ namespace BitcoinUTXOSlicer
             return opreturnMark;
         }
 
+
+        //##################################################################################
         ////II.*****数据库初始化*****
         //----1.测试数据库连接状态----
         public bool databaseConnectTest(bool printMark)

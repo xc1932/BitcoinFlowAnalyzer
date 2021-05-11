@@ -35,7 +35,7 @@ namespace BitcoinFlowAnalyzer
         }
 
         public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, string UtxoSliceFilePath,
-            string UtxoSliceFileName, string OpReturnFilePath, string sliceIntervalTimeType, int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
+            string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName, string sliceIntervalTimeType, int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
         {
             //1.加载可疑地址
             Stopwatch timer1 = new Stopwatch();
@@ -49,7 +49,7 @@ namespace BitcoinFlowAnalyzer
             this.sqlConnectionString = sqlConnectionString;
             //initialization_Database(true);
             bitcoinUTXOSlicer = new BitcoinUTXOSlicer_Class(blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName, UtxoSliceFilePath,
-            UtxoSliceFileName, OpReturnFilePath, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
+            UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight);
             //restore_DatabaseForBlockParserTable();
         }
 
@@ -376,8 +376,10 @@ namespace BitcoinFlowAnalyzer
         //III.追踪结果保存(写库saveToDatabase)
 
         public void run()
-        { 
-            
+        {
+            Console.WriteLine("开始执行......");
+            ParserBlock readyBlock;
+
         } 
     }
 }
