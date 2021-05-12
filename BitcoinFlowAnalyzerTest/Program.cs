@@ -3,6 +3,7 @@ using NBitcoin;
 using BitcoinBlockchain.Data;
 using OrderedBitcoinBlockchainParser;
 using BitcoinFlowAnalyzer;
+using BitcoinUTXOSlicer;
 
 namespace BitcoinFlowAnalyzerTest
 {
@@ -10,8 +11,46 @@ namespace BitcoinFlowAnalyzerTest
     {
         static void Main(string[] args)
         {
-            string suspectAddressPath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
-            BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressPath);
+            //1.初次运行
+            string suspectAddressStorePath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
+            string blockchainFilePath = @"F:\data\blocks";
+            string blockProcessContextFilePath = @"F:\BitcoinFlowAnalyzerResult\blockProcessContextFile";
+            string blockProcessContextFileName = null;
+            string UtxoSliceFilePath = @"F:\BitcoinFlowAnalyzerResult\sliceStateFile";
+            string UtxoSliceFileName = null;
+            string OpReturnFilePath = @"F:\BitcoinFlowAnalyzerResult\opreturnOutputFile";
+            string AddressBalanceFilePath = @"F:\BitcoinFlowAnalyzerResult\addressBalanceFile";
+            string AddressBalanceFileName = null;
+            string sliceIntervalTimeType = Configuration_Class.Month;
+            int sliceIntervalTime = 1;
+            DateTime endTime = new DateTime(2021, 12, 12);
+            int endBlockHeight = 681572;
+            string sqlConnectionString = "Data Source=DESKTOP-0B83G22\\SQL2016;Initial Catalog=BitcoinUTXOSlice;Integrated Security=True";
+            BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressStorePath, blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName,
+            UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
+            bitcoinFlowAnalyzer.run();
+
+            ////2.增量启动
+            //string suspectAddressStorePath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
+            //string blockchainFilePath = @"F:\data\blocks";
+            //string blockProcessContextFilePath = @"F:\BitcoinFlowAnalyzerResult\blockProcessContextFile";
+            //string blockProcessContextFileName = "BPC_2755_2009年02月02日18时21分36秒.dat.rar";
+            //string UtxoSliceFilePath = @"F:\BitcoinFlowAnalyzerResult\sliceStateFile";
+            //string UtxoSliceFileName = "UtxoSlice_2755_2009年02月02日18时21分36秒.dat.rar";
+            //string OpReturnFilePath = @"F:\BitcoinFlowAnalyzerResult\opreturnOutputFile";
+            //string AddressBalanceFilePath = @"F:\BitcoinFlowAnalyzerResult\addressBalanceFile";
+            //string AddressBalanceFileName = "AddressBalance_2755_2009年02月02日18时21分36秒.dat.rar";
+            //string sliceIntervalTimeType = Configuration_Class.Month;
+            //int sliceIntervalTime = 1;
+            //DateTime endTime = new DateTime(2021, 12, 12);
+            //int endBlockHeight = 681572;
+            //string sqlConnectionString = "Data Source=DESKTOP-0B83G22\\SQL2016;Initial Catalog=BitcoinUTXOSlice;Integrated Security=True";
+            //BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressStorePath, blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName,
+            //UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
+            //bitcoinFlowAnalyzer.run();
+
+
+
 
 
             //OrderedBitcoinBlockchainParser_Class orderedBitcoinBlockchainParser = new OrderedBitcoinBlockchainParser_Class(@"F:\data\blocks", @"F:\writedatabase\blockProcessContextFileForDatabase", null);

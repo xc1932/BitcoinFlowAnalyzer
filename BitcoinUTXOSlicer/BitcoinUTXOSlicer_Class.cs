@@ -457,7 +457,7 @@ namespace BitcoinUTXOSlicer
             }
         }
         //(@@@@@@@@@新增@@@@@@@@@)
-        public void save_AllProgramContextFileWithoutDB(Int64 nextBlockID)
+        public void save_AllProgramContextFileWithoutDB()
         {
             if (endConditionJudgment(recentlySliceDateTime, nextParserBlock.Header.BlockTime.DateTime))
             {

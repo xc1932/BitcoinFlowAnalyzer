@@ -34,8 +34,9 @@ namespace BitcoinFlowAnalyzer
             Console.WriteLine("加载可疑地址用时:" + timer1.Elapsed);
         }
 
-        public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, string UtxoSliceFilePath,
-            string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName, string sliceIntervalTimeType, int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
+        public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, 
+            string UtxoSliceFilePath,string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName, string sliceIntervalTimeType, 
+            int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
         {
             //1.加载可疑地址
             Stopwatch timer1 = new Stopwatch();
@@ -50,7 +51,6 @@ namespace BitcoinFlowAnalyzer
             //initialization_Database(true);
             bitcoinUTXOSlicer = new BitcoinUTXOSlicer_Class(blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName, UtxoSliceFilePath,
             UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight);
-            //restore_DatabaseForBlockParserTable();
         }
 
         //I.染色地址加载和染色池字典初始化
@@ -86,7 +86,7 @@ namespace BitcoinFlowAnalyzer
         }
 
         //II.交易追踪
-        //2.判断opreturn输出
+        //1.判断opreturn输出
         public bool isOpreturn(TxOut txOut)
         {
             bool opreturnMark = false;
@@ -111,14 +111,14 @@ namespace BitcoinFlowAnalyzer
             return opreturnMark;
         }        
 
-        //脚本字符串转换为脚本数组        
+        //2.脚本字符串转换为脚本数组        
         public byte[] scriptStrToByteArray(string scriptStr)
         {
             byte[] scriptByteArray = Org.BouncyCastle.Utilities.Encoders.Hex.Decode(scriptStr);
             return scriptByteArray;
         }        
 
-        //判断铸币交易是否应该被追踪
+        //3.判断铸币交易是否应该被追踪
         public bool coinbaseTxTraceJudging(Transaction transaction) 
         {
             foreach (TxOut transactionOutput in transaction.Outputs)
@@ -151,7 +151,7 @@ namespace BitcoinFlowAnalyzer
             return false;
         }
 
-        //判断常规交易是否应该被追踪
+        //4.判断常规交易是否应该被追踪
         public bool regularTxTraceJudging(Transaction transaction) 
         {
             //1.判断输入中是否又可疑地址
@@ -216,17 +216,17 @@ namespace BitcoinFlowAnalyzer
             return false;
         }        
 
-        //判断脚本对应地址是否为可疑地址
+        //5.判断脚本对应地址是否为可疑地址
         public bool isSuspectedAddress(string scriptStr,out string suspectAddress)
         {
             bool isNonStandardPayment;
             byte[] scriptByteArray = scriptStrToByteArray(scriptStr);
             string outputAddress = addressParser.extractAddressFromScript(scriptByteArray, 0x00, out isNonStandardPayment);
+            suspectAddress = outputAddress;
             if (outputAddress != null)
             {
                 if (dyingPoolingDic.ContainsKey(outputAddress))
-                {
-                    suspectAddress = outputAddress;
+                {                    
                     return true;
                 }
                 else
@@ -238,11 +238,10 @@ namespace BitcoinFlowAnalyzer
             {
                 //未提取出地址(可能提取函数有问题)
             }
-            suspectAddress = null;
             return false;
         }
 
-        //铸币交易追踪
+        //6.铸币交易追踪
         //当输出中有可疑地址时才执行该函数
         public void traceCoinbaseTransaction(Transaction transaction)
         {
@@ -257,9 +256,8 @@ namespace BitcoinFlowAnalyzer
                     if (suspectAddressObject.Isdyepool)                                     
                     {
                         newCoin.dyeGene(suspectAddressObject.DyeDNAID);                     //2.如果是染色地址，用地址对应的DNA染色
-
                     }
-                    else 
+                    else
                     {
                         newCoin.dyeGene(DNA_Class.colorlessDNAID);                          //2.如果不是染色地址，用无色DNA染色
                     }
@@ -269,11 +267,11 @@ namespace BitcoinFlowAnalyzer
             }
         }
 
-        //常规交易追踪
+        //7.常规交易追踪
         //当前输入或输出中有可疑地址时才执行该函数
         public void traceRegularTransaction(Transaction transaction)
         {
-            //融合输入上的币
+            //1.融合输入上的币
             Coin_Class mixedInputsCoin = new Coin_Class(0);
             foreach (TxIn txIn in transaction.Inputs)
             {
@@ -293,10 +291,10 @@ namespace BitcoinFlowAnalyzer
                     Coin_Class.mixCoin(newCoin, mixedInputsCoin);
                 }
             }
-            //分发输入融合的币到各个输出上
+            //2.分发输入融合的币到各个输出上
             if (mixedInputsCoin.GeneDictionary.Count==1&&mixedInputsCoin.GeneDictionary.ContainsKey(DNA_Class.colorlessDNAID))
             {
-                //无新可疑地址产生的分发
+                //(1)无新可疑地址产生的分发
                 foreach (TxOut txOut in transaction.Outputs)
                 {
                     string suspectAddress = null;
@@ -307,8 +305,7 @@ namespace BitcoinFlowAnalyzer
                         Coin_Class newCoin = new Coin_Class(txOut.Value.Satoshi);               //1.构造新币
                         if (suspectAddressObject.Isdyepool)
                         {
-                            newCoin.dyeGene(suspectAddressObject.DyeDNAID);        //2.如果是染色地址，用地址对应的DNA染色
-
+                            newCoin.dyeGene(suspectAddressObject.DyeDNAID);                     //2.如果是染色地址，用地址对应的DNA染色
                         }
                         else
                         {
@@ -321,7 +318,7 @@ namespace BitcoinFlowAnalyzer
             }
             else
             {
-                //有新可疑地址产生的分发
+                //(2)有新可疑地址产生的分发
                 foreach (TxOut txOut in transaction.Outputs)
                 {
                     string suspectAddress = null;
@@ -334,19 +331,24 @@ namespace BitcoinFlowAnalyzer
                         {
                             splitedCoin.weightedDyeGene(suspectAddressObject.DyeDNAID, 0.5M);
                         }
-                        else
-                        {
-                            splitedCoin.dyeGene(DNA_Class.colorlessDNAID);
-                        }
+                        //else
+                        //{
+                        //    splitedCoin.weightedDyeGene(DNA_Class.colorlessDNAID, 0.5M);
+                        //}
                         Coin_Class.mixCoin(splitedCoin, suspectAddressObject.BalanceCoin);
                         Coin_Class.mixCoin(splitedCoin, suspectAddressObject.TotalPassedCoin);
                     }
                     else
                     {
-                        //产生新的可疑地址(@@@@@@@@@@@@@@@@@@@@@@修改@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@)                        
+                        //产生新的可疑地址(@@@@@@@@@@@@@@@@@@@@@@修改@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@)        
+                        Coin_Class newCoin = new Coin_Class(bitcoinUTXOSlicer.addressBalanceDic[suspectAddress]);
+                        newCoin.dyeGene(DNA_Class.colorlessDNAID);
                         Address_Class newSuspectedAddress = new Address_Class();//需要去UTXO中查找新可疑地址当前所拥有的余额币(可疑考虑在UTXOItem_Class中添加一个输出到的地址属性加快查找速度)
-                        Coin_Class.mixCoin(newSuspectedAddress.BalanceCoin,newSuspectedAddress.BalanceCoin);
-                        Coin_Class.mixCoin(newSuspectedAddress.BalanceCoin, newSuspectedAddress.TotalPassedCoin);
+                        Coin_Class.mixCoin(newCoin,newSuspectedAddress.BalanceCoin);
+                        Coin_Class.mixCoin(newCoin, newSuspectedAddress.TotalPassedCoin);
+
+                        Coin_Class.mixCoin(splitedCoin, newSuspectedAddress.BalanceCoin);
+                        Coin_Class.mixCoin(splitedCoin, newSuspectedAddress.TotalPassedCoin);
                         dyingPoolingDic.Add(suspectAddress, newSuspectedAddress);
                     }
                 }
@@ -354,7 +356,7 @@ namespace BitcoinFlowAnalyzer
 
         }
 
-        //交易追踪
+        //8.交易追踪
         public void traceTransaction(Transaction transaction)
         {
             if (transaction.IsCoinBase)
@@ -373,13 +375,50 @@ namespace BitcoinFlowAnalyzer
             }
         }
 
-        //III.追踪结果保存(写库saveToDatabase)
+        //III.保存和恢复
 
+        //IV.追踪结果保存(写库saveToDatabase)
+
+        //运行
         public void run()
         {
             Console.WriteLine("开始执行......");
             ParserBlock readyBlock;
+            DateTime dateTime = DateTime.Now;
+            while ((readyBlock=bitcoinUTXOSlicer.get_NextParserBlock())!=null) 
+            {
+                foreach (Transaction transaction in readyBlock.Transactions)
+                {
+                    //交易追踪
+                    traceTransaction(transaction); 
+                    //以交易为粒度更新UTXO
+                    bitcoinUTXOSlicer.updateUTXO_ForOneTransaction(transaction);
+                }
+                //打印100个块处理用时
+                if (bitcoinUTXOSlicer.orderedBlockchainParser.processedBlockAmount % 100 == 0)
+                {
+                    DateTime currentDateTime = DateTime.Now;
+                    TimeSpan timeSpan = currentDateTime - dateTime;
+                    Console.WriteLine("处理100个块用时:" + timeSpan);
+                    dateTime = currentDateTime;
+                }
+                //常规打印
+                if (bitcoinUTXOSlicer.orderedBlockchainParser.processedBlockAmount % 100 == 0)
+                {
+                    Console.WriteLine("已处理" + bitcoinUTXOSlicer.orderedBlockchainParser.processedBlockAmount + "个区块");
+                    Console.WriteLine("当前区块时间:" + bitcoinUTXOSlicer.nextParserBlock.Header.BlockTime.DateTime);
+                    Console.WriteLine("相同交易出现次数:" + bitcoinUTXOSlicer.sameTransactionCount);
+                    Console.WriteLine("***********************");
+                }
+                //保存中间状态
+                bitcoinUTXOSlicer.save_AllProgramContextFileWithoutDB();
+                if (bitcoinUTXOSlicer.terminationConditionJudment())
+                {
+                    //追踪结果写库
 
+                    break;
+                }
+            }
         } 
     }
 }
