@@ -457,7 +457,7 @@ namespace BitcoinUTXOSlicer
             }
         }
         //(@@@@@@@@@新增@@@@@@@@@)
-        public void save_AllProgramContextFileWithoutDB()
+        public bool save_AllProgramContextFileWithoutDB()
         {
             if (endConditionJudgment(recentlySliceDateTime, nextParserBlock.Header.BlockTime.DateTime))
             {
@@ -489,7 +489,9 @@ namespace BitcoinUTXOSlicer
                 sw2.Stop();
                 Console.WriteLine("保存第" + sliceFileAmount + "个地址余额状态用时:" + sw2.Elapsed);
                 recentlySliceDateTime = nextParserBlock.Header.BlockTime.DateTime;
+                return true;
             }
+            return false;
         }
 
         //----6.终止条件判断(新增)----

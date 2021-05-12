@@ -21,13 +21,16 @@ namespace BitcoinFlowAnalyzerTest
             string OpReturnFilePath = @"F:\BitcoinFlowAnalyzerResult\opreturnOutputFile";
             string AddressBalanceFilePath = @"F:\BitcoinFlowAnalyzerResult\addressBalanceFile";
             string AddressBalanceFileName = null;
+            string DyingPoolingDicFilePath = @"F:\BitcoinFlowAnalyzerResult\dyingPoolingDicFile";
+            string DyingPoolingDicFileName = null;
             string sliceIntervalTimeType = Configuration_Class.Month;
             int sliceIntervalTime = 1;
             DateTime endTime = new DateTime(2021, 12, 12);
             int endBlockHeight = 681572;
             string sqlConnectionString = "Data Source=DESKTOP-0B83G22\\SQL2016;Initial Catalog=BitcoinUTXOSlice;Integrated Security=True";
             BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressStorePath, blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName,
-            UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
+            UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, DyingPoolingDicFilePath, DyingPoolingDicFileName,sliceIntervalTimeType, 
+            sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
             bitcoinFlowAnalyzer.run();
 
             ////2.增量启动

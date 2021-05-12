@@ -19,6 +19,8 @@ namespace BitcoinFlowAnalyzer
         Dictionary<string, Address_Class> dyingPoolingDic = new Dictionary<string, Address_Class>();
         AddressParser_Class addressParser = new AddressParser_Class();
         HashSet<string> suspectAddressCluster;
+        string DyingPoolingDicFilePath = null;
+        string DyingPoolingDicFileName = null;
 
         public BitcoinFlowAnalyzer_Class() { }
 
@@ -35,9 +37,9 @@ namespace BitcoinFlowAnalyzer
         }
 
         public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, 
-            string UtxoSliceFilePath,string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName, string sliceIntervalTimeType, 
-            int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
-        {
+            string UtxoSliceFilePath,string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName,string DyingPoolingDicFilePath,
+            string DyingPoolingDicFileName,string sliceIntervalTimeType,int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
+        {                        
             //1.加载可疑地址
             Stopwatch timer1 = new Stopwatch();
             timer1.Start();
@@ -46,11 +48,14 @@ namespace BitcoinFlowAnalyzer
             Console.WriteLine("可以地址数量:"+suspectAddressCluster.Count);
             Console.WriteLine("染色池字典地址数量:" + dyingPoolingDic.Count);
             Console.WriteLine("加载可疑地址用时:"+timer1.Elapsed);
-            //2.初始化BitcoinUTXOSlicer_Class相关的参数
-            this.sqlConnectionString = sqlConnectionString;
-            //initialization_Database(true);
+            //2.初始化BitcoinUTXOSlicer_Class相关的参数                        
             bitcoinUTXOSlicer = new BitcoinUTXOSlicer_Class(blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName, UtxoSliceFilePath,
             UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight);
+            //3.初始化BitcoinFlowAnalyzer相关的参数
+            this.sqlConnectionString = sqlConnectionString;
+            this.DyingPoolingDicFilePath = DyingPoolingDicFilePath;
+            this.DyingPoolingDicFileName = DyingPoolingDicFileName;
+            //initialization_Database(true);
         }
 
         //I.染色地址加载和染色池字典初始化
@@ -340,8 +345,16 @@ namespace BitcoinFlowAnalyzer
                     }
                     else
                     {
-                        //产生新的可疑地址(@@@@@@@@@@@@@@@@@@@@@@修改@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@)        
-                        Coin_Class newCoin = new Coin_Class(bitcoinUTXOSlicer.addressBalanceDic[suspectAddress]);
+                        //产生新的可疑地址(@@@@@@@@@@@@@@@@@@@@@@修改@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@)  
+                        Coin_Class newCoin;
+                        if (bitcoinUTXOSlicer.addressBalanceDic.ContainsKey(suspectAddress))
+                        {
+                            newCoin = new Coin_Class(bitcoinUTXOSlicer.addressBalanceDic[suspectAddress]);
+                        }
+                        else
+                        {
+                            newCoin = new Coin_Class(0);
+                        }                        
                         newCoin.dyeGene(DNA_Class.colorlessDNAID);
                         Address_Class newSuspectedAddress = new Address_Class();//需要去UTXO中查找新可疑地址当前所拥有的余额币(可疑考虑在UTXOItem_Class中添加一个输出到的地址属性加快查找速度)
                         Coin_Class.mixCoin(newCoin,newSuspectedAddress.BalanceCoin);
@@ -376,6 +389,16 @@ namespace BitcoinFlowAnalyzer
         }
 
         //III.保存和恢复
+        public void save_dyingPoolingDic(int processedBlockAmount, DateTime endBlockTime)
+        { 
+            string dyingPoolingDicFileFinalPath= Path.Combine(DyingPoolingDicFilePath, "DyingPoolingDic_" + processedBlockAmount + "_" + endBlockTime.ToString("yyyy年MM月dd日HH时mm分ss秒") + ".dat");
+            using (StreamWriter sw = File.CreateText(dyingPoolingDicFileFinalPath))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Serialize(sw, dyingPoolingDic);
+            }
+            bitcoinUTXOSlicer.orderedBlockchainParser.Compress(dyingPoolingDicFileFinalPath, true);
+        }
 
         //IV.追踪结果保存(写库saveToDatabase)
 
@@ -411,7 +434,15 @@ namespace BitcoinFlowAnalyzer
                     Console.WriteLine("***********************");
                 }
                 //保存中间状态
-                bitcoinUTXOSlicer.save_AllProgramContextFileWithoutDB();
+                if(bitcoinUTXOSlicer.save_AllProgramContextFileWithoutDB())
+                {
+                    Console.WriteLine("正在保存第" + bitcoinUTXOSlicer.sliceFileAmount + "个dyingPoolingDic状态,请勿现在终止程序..........");
+                    Stopwatch sw1 = new Stopwatch();
+                    sw1.Start();
+                    save_dyingPoolingDic(bitcoinUTXOSlicer.orderedBlockchainParser.processedBlockAmount,bitcoinUTXOSlicer.nextParserBlock.Header.BlockTime.DateTime);
+                    sw1.Stop();
+                    Console.WriteLine("保存第" + bitcoinUTXOSlicer.sliceFileAmount + "个dyingPoolingDic状态用时:" + sw1.Elapsed);
+                }
                 if (bitcoinUTXOSlicer.terminationConditionJudment())
                 {
                     //追踪结果写库
