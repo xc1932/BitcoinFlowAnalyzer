@@ -10,11 +10,11 @@ namespace BitcoinFlowAnalyzer
 {
     public class Address_Class
     {
-        bool isDyePool = false;                             //该地址是否是染色池
-        IDdatatype dyeDNAID;                                //当地址是染色池时的染色DNAID 
+        public bool isDyePool = false;                             //该地址是否是染色池
+        public IDdatatype dyeDNAID;                                //当地址是染色池时的染色DNAID 
 
-        Coin_Class balanceCoin = new Coin_Class(0);         //余额
-        Coin_Class totalPassedCoin = new Coin_Class(0);     //经过的币的总数
+        public Coin_Class balanceCoin = new Coin_Class(0);         //余额
+        public Coin_Class totalPassedCoin = new Coin_Class(0);     //经过的币的总数
         //DateTime firstTransactionTime = DateTime.MaxValue;  //最早的交易时间
         //DateTime lastTransactionTime = DateTime.MinValue;   //最晚的交易时间
 

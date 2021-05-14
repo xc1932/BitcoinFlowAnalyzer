@@ -9,8 +9,8 @@ namespace BitcoinFlowAnalyzer
 {
     public class Coin_Class
     {
-        decimal amount;
-        SortedDictionary<IDdatatype, DNA_Class> geneDictionary;
+        public decimal amount;
+        public SortedDictionary<IDdatatype, DNA_Class> geneDictionary;
 
         internal decimal Amount { get => amount; set => amount = value; }
         internal SortedDictionary<IDdatatype, DNA_Class> GeneDictionary { get => geneDictionary; }

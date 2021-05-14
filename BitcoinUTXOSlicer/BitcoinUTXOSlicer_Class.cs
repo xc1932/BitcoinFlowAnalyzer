@@ -523,7 +523,7 @@ namespace BitcoinUTXOSlicer
             FileInfo fileName = new FileInfo(utxoSlicerContextFileFinalPath);
             if (fileName.Extension == ".rar")
             {
-                Console.WriteLine("正在解压UtxoSlice下文状态文件......");
+                Console.WriteLine("正在解压UtxoSlice上下文状态文件......");
                 orderedBlockchainParser.Decompress(utxoSlicerContextFileFinalPath, false);
                 utxoSlicerContextFileFinalPath = Path.Combine(UtxoSliceFilePath, Path.GetFileNameWithoutExtension(utxoSlicerContextFileFinalPath));
             }
@@ -572,7 +572,7 @@ namespace BitcoinUTXOSlicer
             FileInfo fileName = new FileInfo(addressBalanceContextFileFinalPath);
             if (fileName.Extension == ".rar")
             {
-                Console.WriteLine("正在解压AddressBalance下文状态文件......");
+                Console.WriteLine("正在解压AddressBalance上下文状态文件......");
                 orderedBlockchainParser.Decompress(addressBalanceContextFileFinalPath, false);
                 addressBalanceContextFileFinalPath = Path.Combine(AddressBalanceFilePath, Path.GetFileNameWithoutExtension(addressBalanceContextFileFinalPath));
             }

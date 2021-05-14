@@ -9,9 +9,9 @@ namespace BitcoinFlowAnalyzer
 {
     public class DNA_Class
     {
-        IDdatatype dnaID;
-        decimal amount;
-        decimal percent;
+        public IDdatatype dnaID;
+        public decimal amount;
+        public decimal percent;
 
         internal IDdatatype DNAID { get => dnaID; }
         internal decimal Amount { get => amount; set => amount = value; }

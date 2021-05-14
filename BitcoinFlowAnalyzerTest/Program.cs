@@ -4,6 +4,8 @@ using BitcoinBlockchain.Data;
 using OrderedBitcoinBlockchainParser;
 using BitcoinFlowAnalyzer;
 using BitcoinUTXOSlicer;
+using System.Collections.Generic;
+
 
 namespace BitcoinFlowAnalyzerTest
 {
@@ -11,7 +13,7 @@ namespace BitcoinFlowAnalyzerTest
     {
         static void Main(string[] args)
         {
-            //1.初次运行
+            ////1.初次运行
             string suspectAddressStorePath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
             string blockchainFilePath = @"F:\data\blocks";
             string blockProcessContextFilePath = @"F:\BitcoinFlowAnalyzerResult\blockProcessContextFile";
@@ -25,35 +27,37 @@ namespace BitcoinFlowAnalyzerTest
             string DyingPoolingDicFileName = null;
             string sliceIntervalTimeType = Configuration_Class.Month;
             int sliceIntervalTime = 1;
-            DateTime endTime = new DateTime(2021, 12, 12);
+            DateTime endTime = new DateTime(2009, 2, 15);
             int endBlockHeight = 681572;
             string sqlConnectionString = "Data Source=DESKTOP-0B83G22\\SQL2016;Initial Catalog=BitcoinUTXOSlice;Integrated Security=True";
             BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressStorePath, blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName,
-            UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, DyingPoolingDicFilePath, DyingPoolingDicFileName,sliceIntervalTimeType, 
+            UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, DyingPoolingDicFilePath, DyingPoolingDicFileName, sliceIntervalTimeType,
             sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
             bitcoinFlowAnalyzer.run();
 
-            ////2.增量启动
-            //string suspectAddressStorePath = @"E:\Code\BlockChainProject\workspace\AddressClusterFile\AddressClusterFinalResult.txt";
+            //////2.增量启动
+            //string suspectAddressStorePath = null;
             //string blockchainFilePath = @"F:\data\blocks";
             //string blockProcessContextFilePath = @"F:\BitcoinFlowAnalyzerResult\blockProcessContextFile";
-            //string blockProcessContextFileName = "BPC_2755_2009年02月02日18时21分36秒.dat.rar";
+            //string blockProcessContextFileName = "BPC_2755_2009年02月02日18时21分36秒.dat.rar";           //
             //string UtxoSliceFilePath = @"F:\BitcoinFlowAnalyzerResult\sliceStateFile";
-            //string UtxoSliceFileName = "UtxoSlice_2755_2009年02月02日18时21分36秒.dat.rar";
+            //string UtxoSliceFileName = "UtxoSlice_2755_2009年02月02日18时21分36秒.dat.rar";               //
             //string OpReturnFilePath = @"F:\BitcoinFlowAnalyzerResult\opreturnOutputFile";
             //string AddressBalanceFilePath = @"F:\BitcoinFlowAnalyzerResult\addressBalanceFile";
-            //string AddressBalanceFileName = "AddressBalance_2755_2009年02月02日18时21分36秒.dat.rar";
+            //string AddressBalanceFileName = "AddressBalance_2755_2009年02月02日18时21分36秒.dat.rar";     //
+            //string DyingPoolingDicFilePath = @"F:\BitcoinFlowAnalyzerResult\dyingPoolingDicFile";
+            //string DyingPoolingDicFileName = "DyingPoolingDic_2755_2009年02月02日18时21分36秒.dat.rar";   //
             //string sliceIntervalTimeType = Configuration_Class.Month;
             //int sliceIntervalTime = 1;
             //DateTime endTime = new DateTime(2021, 12, 12);
             //int endBlockHeight = 681572;
             //string sqlConnectionString = "Data Source=DESKTOP-0B83G22\\SQL2016;Initial Catalog=BitcoinUTXOSlice;Integrated Security=True";
             //BitcoinFlowAnalyzer_Class bitcoinFlowAnalyzer = new BitcoinFlowAnalyzer_Class(suspectAddressStorePath, blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName,
-            //UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
+            //UtxoSliceFilePath, UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, DyingPoolingDicFilePath, DyingPoolingDicFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight, sqlConnectionString);
             //bitcoinFlowAnalyzer.run();
 
 
-
+            //bitcoinFlowAnalyzer.JsonSerializerTest();
 
 
             //OrderedBitcoinBlockchainParser_Class orderedBitcoinBlockchainParser = new OrderedBitcoinBlockchainParser_Class(@"F:\data\blocks", @"F:\writedatabase\blockProcessContextFileForDatabase", null);
