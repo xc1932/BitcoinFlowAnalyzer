@@ -658,7 +658,7 @@ namespace BitcoinFlowAnalyzer
                 if (!tableExist("SuspectAddress"))
                 {
                     string commandStr = "CREATE TABLE [dbo].[SuspectAddress]([AddressID][bigint] NOT NULL PRIMARY KEY,[Address] [varchar](64) NOT NULL UNIQUE," +
-                                        "[IsDyePool] [bit] NOT NULL,[DyeDNAID] [int] NOT NULL,[BalanceCoin] [int] NOT NULL,[TotalPassedCoin] [int] NOT NULL)";
+                                        "[IsDyePool] [bit] NOT NULL,[DyeDNAID] [int] NOT NULL,[BalanceCoin] [bigint] NOT NULL,[TotalPassedCoin] [bigint] NOT NULL)";
                     sqlCommand = new SqlCommand(commandStr, sqlConnection);
                     sqlCommand.ExecuteNonQuery();
                     if (printMark)
@@ -677,7 +677,7 @@ namespace BitcoinFlowAnalyzer
                 if (!tableExist("GeneResult"))
                 {
                     string commandStr = "CREATE TABLE [dbo].[GeneResult]([GeneResultRecordID][bigint] NOT NULL PRIMARY KEY,[AddressID] [bigint] NOT NULL,[DNAID] [int] NOT NULL," +
-                                        "[DNAAmountInBalance] [int] NOT NULL,[DNAWeightInBalance] [float] NOT NULL,[DNAAmountInTotal] [int] NOT NULL,[DNAWeightInTotal] [float] NOT NULL)";
+                                        "[DNAAmountInBalance] [bigint] NOT NULL,[DNAWeightInBalance] [float] NOT NULL,[DNAAmountInTotal] [bigint] NOT NULL,[DNAWeightInTotal] [float] NOT NULL)";
                     sqlCommand = new SqlCommand(commandStr, sqlConnection);
                     sqlCommand.ExecuteNonQuery();
                     if (printMark)
@@ -708,7 +708,7 @@ namespace BitcoinFlowAnalyzer
                 //1.创建SuspectAddress表的存储过程
                 if (!procedureExist("Insert_SuspectAddress_Proc"))
                 {                   
-                    string commandStr = "CREATE PROC Insert_SuspectAddress_Proc @AddressID bigint,@Address varchar(64),@IsDyePool bit,@DyeDNAID int,@BalanceCoin int,@TotalPassedCoin int " +
+                    string commandStr = "CREATE PROC Insert_SuspectAddress_Proc @AddressID bigint,@Address varchar(64),@IsDyePool bit,@DyeDNAID int,@BalanceCoin bigint,@TotalPassedCoin bigint " +
                                         "AS BEGIN INSERT INTO[dbo].[SuspectAddress] VALUES (@AddressID,@Address,@IsDyePool,@DyeDNAID,@BalanceCoin,@TotalPassedCoin) END";
                     sqlCommand = new SqlCommand(commandStr, sqlConnection);
                     sqlCommand.ExecuteNonQuery();
@@ -727,8 +727,7 @@ namespace BitcoinFlowAnalyzer
                 //2.创建GeneResult表的存储过程
                 if (!procedureExist("Insert_GeneResult_Proc"))
                 {
-                    string commandStr = "CREATE PROC Insert_GeneResult_Proc @GeneResultRecordID bigint,@AddressID bigint,@DNAID int,@DNAAmountInBalance int,@DNAWeightInBalance float ,DNAAmountInTotal int,DNAWeightInTotal float" +
-                                        "AS BEGIN INSERT INTO[dbo].[GeneResult] VALUES (@GeneResultRecordID,@AddressID,@DNAID,@DNAAmountInBalance,@DNAWeightInBalance,@DNAAmountInTotal,@DNAWeightInTotal) END";
+                    string commandStr = "CREATE PROC Insert_GeneResult_Proc @GeneResultRecordID bigint,@AddressID bigint,@DNAID int,@DNAAmountInBalance bigint,@DNAWeightInBalance float,@DNAAmountInTotal bigint,@DNAWeightInTotal float AS BEGIN INSERT INTO[dbo].[GeneResult] VALUES (@GeneResultRecordID,@AddressID,@DNAID,@DNAAmountInBalance,@DNAWeightInBalance,@DNAAmountInTotal,@DNAWeightInTotal) END";
                     sqlCommand = new SqlCommand(commandStr, sqlConnection);
                     sqlCommand.ExecuteNonQuery();
                     if (printMark)
@@ -758,7 +757,7 @@ namespace BitcoinFlowAnalyzer
                 if (!tableTypeExist("SuspectAddressTableType"))
                 {
                     string commandStr = "CREATE TYPE SuspectAddressTableType AS TABLE([AddressID][bigint] NOT NULL,[Address] [varchar](64) NOT NULL," +
-                                        "[IsDyePool] [bit] NOT NULL,[DyeDNAID] [int] NOT NULL,[BalanceCoin] [int] NOT NULL,[TotalPassedCoin] [int] NOT NULL)";
+                                        "[IsDyePool] [bit] NOT NULL,[DyeDNAID] [int] NOT NULL,[BalanceCoin] [bigint] NOT NULL,[TotalPassedCoin] [bigint] NOT NULL)";
                     sqlCommand = new SqlCommand(commandStr, sqlConnection);
                     sqlCommand.ExecuteNonQuery();
                     if (printMark)
@@ -777,7 +776,7 @@ namespace BitcoinFlowAnalyzer
                 if (!tableTypeExist("GeneResultTableType"))
                 {
                     string commandStr = "CREATE TYPE GeneResultTableType AS TABLE([GeneResultRecordID][bigint] NOT NULL,[AddressID] [bigint] NOT NULL,[DNAID] [int] NOT NULL," +
-                                        "[DNAAmountInBalance] [int] NOT NULL,[DNAWeightInBalance] [float] NOT NULL,[DNAAmountInTotal] [int] NOT NULL,[DNAWeightInTotal] [float] NOT NULL)";
+                                        "[DNAAmountInBalance] [bigint] NOT NULL,[DNAWeightInBalance] [float] NOT NULL,[DNAAmountInTotal] [bigint] NOT NULL,[DNAWeightInTotal] [float] NOT NULL)";
                     sqlCommand = new SqlCommand(commandStr, sqlConnection);
                     sqlCommand.ExecuteNonQuery();
                     if (printMark)
@@ -831,8 +830,8 @@ namespace BitcoinFlowAnalyzer
                 new DataColumn("Address",typeof(String)),//1
                 new DataColumn("IsDyePool",typeof(Boolean)),//2
                 new DataColumn("DyeDNAID",typeof(Int32)),//3
-                new DataColumn("BalanceCoin",typeof(Int32)),//4
-                new DataColumn("TotalPassedCoin",typeof(Int32)),//5
+                new DataColumn("BalanceCoin",typeof(Int64)),//4
+                new DataColumn("TotalPassedCoin",typeof(Int64)),//5
             });
             return dt;
         }
@@ -845,9 +844,9 @@ namespace BitcoinFlowAnalyzer
                 new DataColumn("GeneResultRecordID",typeof(Int64)),//0    
                 new DataColumn("AddressID",typeof(Int64)),//1
                 new DataColumn("DNAID",typeof(Int32)),//2
-                new DataColumn("DNAAmountInBalance",typeof(Int32)),//3
+                new DataColumn("DNAAmountInBalance",typeof(Int64)),//3
                 new DataColumn("DNAWeightInBalance",typeof(Double)),//4
-                new DataColumn("DNAAmountInTotal",typeof(Int32)),//5
+                new DataColumn("DNAAmountInTotal",typeof(Int64)),//5
                 new DataColumn("DNAWeightInTotal",typeof(Double)),//6
             });
             return dt;
@@ -862,7 +861,7 @@ namespace BitcoinFlowAnalyzer
 
         //12.添加一条记录到SuspectAddress的数据表值类型
         public void addOneRowToSuspectAddressDataTable(DataTable dataTable,Int64 addressID,String address,
-                                                       Boolean isDyePool,Int32 dyeDNAID,Int32 balanceCoin,Int32 totalPassedCoin)
+                                                       Boolean isDyePool,Int32 dyeDNAID,Int64 balanceCoin,Int64 totalPassedCoin)
         {
             DataRow dataRow = dataTable.NewRow();
             dataRow[0] = addressID;
@@ -876,7 +875,7 @@ namespace BitcoinFlowAnalyzer
 
         //13.添加一条记录到GeneResult的数据表值类型
         public void addOneRowToGeneResultDataTable(DataTable dataTable, Int64 geneResultRecordID, Int64 addressID, Int32 DNAID,
-                                                   Int32 DNAAmountInBalance, Double DNAWeightInBalance, Int32 DNAAmountInTotal, Double DNAWeightInTotal)
+                                                   Int64 DNAAmountInBalance, Double DNAWeightInBalance, Int64 DNAAmountInTotal, Double DNAWeightInTotal)
         {
             DataRow dataRow = dataTable.NewRow();
             dataRow[0] = geneResultRecordID;
@@ -898,12 +897,12 @@ namespace BitcoinFlowAnalyzer
             {
                 Address_Class suspectAddressValueObject = dyingPoolingDic[suspectAddressStr];
                 addOneRowToSuspectAddressDataTable(suspectAddressDataTable, addressID, suspectAddressStr, suspectAddressValueObject.isDyePool, suspectAddressValueObject.dyeDNAID,
-                    (int)suspectAddressValueObject.balanceCoin.amount, (int)suspectAddressValueObject.totalPassedCoin.amount);
+                    Convert.ToInt64(suspectAddressValueObject.balanceCoin.amount), Convert.ToInt64(suspectAddressValueObject.totalPassedCoin.amount));
                 foreach (IDdatatype DNAID in suspectAddressValueObject.balanceCoin.geneDictionary.Keys)
                 {
-                    Int32 DNAAmountInBalance = (int)suspectAddressValueObject.balanceCoin.geneDictionary[DNAID].amount;
+                    Int64 DNAAmountInBalance = Convert.ToInt64(suspectAddressValueObject.balanceCoin.geneDictionary[DNAID].amount);
                     Double DNAWeightInBalance = (double)suspectAddressValueObject.balanceCoin.geneDictionary[DNAID].percent;
-                    Int32 DNAAmountInTotal = (int)suspectAddressValueObject.totalPassedCoin.geneDictionary[DNAID].amount;
+                    Int64 DNAAmountInTotal = Convert.ToInt64(suspectAddressValueObject.totalPassedCoin.geneDictionary[DNAID].amount);
                     Double DNAWeightInTotal = (double)suspectAddressValueObject.totalPassedCoin.geneDictionary[DNAID].percent;
                     addOneRowToGeneResultDataTable(geneResultDataTable, geneResultRecordID, addressID, DNAID, DNAAmountInBalance, DNAWeightInBalance, DNAAmountInTotal, DNAWeightInTotal);
                     geneResultRecordID++;

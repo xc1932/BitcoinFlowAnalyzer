@@ -20,6 +20,8 @@ namespace BitcoinFlowAnalyzer
         //internal const IDdatatype coinbaseDNAID = 0;
         internal const IDdatatype mtgoxDNAID = 1;
 
+        internal DNA_Class(){}
+
         //未给出percent属性的构造
         internal DNA_Class(IDdatatype dnaID, decimal amount)
         {

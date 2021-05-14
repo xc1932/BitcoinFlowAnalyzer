@@ -15,6 +15,8 @@ namespace BitcoinFlowAnalyzer
         internal decimal Amount { get => amount; set => amount = value; }
         internal SortedDictionary<IDdatatype, DNA_Class> GeneDictionary { get => geneDictionary; }
 
+        internal Coin_Class() { }
+
         //常规初始化一个币(构造地址时初始化的空币)
         internal Coin_Class(decimal amount)
         {
