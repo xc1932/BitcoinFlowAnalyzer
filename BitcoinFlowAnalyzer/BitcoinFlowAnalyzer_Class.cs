@@ -19,7 +19,7 @@ namespace BitcoinFlowAnalyzer
         BitcoinUTXOSlicer_Class bitcoinUTXOSlicer;
         //染色池字典:初始化时使用一个或多个公司的地址集初始化，程序运行后添加被染色池地址染色的地址，最终保存染色池字典的结果
         //结果包括两张表，一张是Dic中的地址表，另一张是基因结果表，一个可疑地址可能有多个基因
-        Dictionary<string, Address_Class> dyingPoolingDic = new Dictionary<string, Address_Class>();
+        public Dictionary<string, Address_Class> dyingPoolingDic = new Dictionary<string, Address_Class>();
         AddressParser_Class addressParser = new AddressParser_Class();
         HashSet<string> suspectAddressCluster;
         string suspectAddressStorePath=null;
@@ -28,6 +28,7 @@ namespace BitcoinFlowAnalyzer
 
         public BitcoinFlowAnalyzer_Class() { }
 
+        //测试版
         public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath) 
         {
             //1.加载可疑地址
@@ -40,10 +41,45 @@ namespace BitcoinFlowAnalyzer
             Console.WriteLine("加载可疑地址用时:" + timer1.Elapsed);
         }
 
-        public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, 
-            string UtxoSliceFilePath,string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName,string DyingPoolingDicFilePath,
-            string DyingPoolingDicFileName,string sliceIntervalTimeType,int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
-        {                                    
+        //单公司版
+        //public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName, 
+        //    string UtxoSliceFilePath,string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName,string DyingPoolingDicFilePath,
+        //    string DyingPoolingDicFileName,string sliceIntervalTimeType,int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString) 
+        //{                                    
+        //    //1.初始化BitcoinUTXOSlicer_Class相关的参数                        
+        //    bitcoinUTXOSlicer = new BitcoinUTXOSlicer_Class(blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName, UtxoSliceFilePath,
+        //    UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight);
+        //    //2.初始化BitcoinFlowAnalyzer相关的参数
+        //    this.sqlConnectionString = sqlConnectionString;
+        //    this.suspectAddressStorePath = suspectAddressStorePath;
+        //    this.DyingPoolingDicFilePath = DyingPoolingDicFilePath;                 //DyingPoolingDic文件路径
+        //    this.DyingPoolingDicFileName = DyingPoolingDicFileName;                 //DyingPoolingDic恢复文件名
+        //    parameter_Detection();
+        //    initialization_Database(true);
+        //    //3.dyingPoolingDic加载
+        //    if (DyingPoolingDicFileName==null)
+        //    {
+        //        //加载可疑地址
+        //        Stopwatch timer1 = new Stopwatch();
+        //        timer1.Start();
+        //        suspectAddressCluster = loadSuspectAddressTodyingPoolingDic(suspectAddressStorePath);
+        //        timer1.Stop();
+        //        Console.WriteLine("可以地址数量:" + suspectAddressCluster.Count);
+        //        Console.WriteLine("染色池字典地址数量:" + dyingPoolingDic.Count);
+        //        Console.WriteLine("加载可疑地址用时:" + timer1.Elapsed);
+        //    }
+        //    else
+        //    {
+        //        //从中断处恢复
+        //        restore_DyingPoolingDicContextForProgram();
+        //    }            
+        //}
+
+        //多公司版
+        public BitcoinFlowAnalyzer_Class(string suspectAddressStorePath, string blockchainFilePath, string blockProcessContextFilePath, string blockProcessContextFileName,
+            string UtxoSliceFilePath, string UtxoSliceFileName, string OpReturnFilePath, string AddressBalanceFilePath, string AddressBalanceFileName, string DyingPoolingDicFilePath,
+            string DyingPoolingDicFileName, string sliceIntervalTimeType, int sliceIntervalTime, DateTime endTime, int endBlockHeight, string sqlConnectionString)
+        {
             //1.初始化BitcoinUTXOSlicer_Class相关的参数                        
             bitcoinUTXOSlicer = new BitcoinUTXOSlicer_Class(blockchainFilePath, blockProcessContextFilePath, blockProcessContextFileName, UtxoSliceFilePath,
             UtxoSliceFileName, OpReturnFilePath, AddressBalanceFilePath, AddressBalanceFileName, sliceIntervalTimeType, sliceIntervalTime, endTime, endBlockHeight);
@@ -55,12 +91,12 @@ namespace BitcoinFlowAnalyzer
             parameter_Detection();
             initialization_Database(true);
             //3.dyingPoolingDic加载
-            if (DyingPoolingDicFileName==null)
+            if (DyingPoolingDicFileName == null)
             {
                 //加载可疑地址
                 Stopwatch timer1 = new Stopwatch();
                 timer1.Start();
-                suspectAddressCluster = loadSuspectAddressTodyingPoolingDic(suspectAddressStorePath);
+                suspectAddressCluster = loadSuspectAddressTodyingPoolingDicFromMultiCompanies(suspectAddressStorePath);
                 timer1.Stop();
                 Console.WriteLine("可以地址数量:" + suspectAddressCluster.Count);
                 Console.WriteLine("染色池字典地址数量:" + dyingPoolingDic.Count);
@@ -71,8 +107,9 @@ namespace BitcoinFlowAnalyzer
                 //从中断处恢复
                 restore_DyingPoolingDicContextForProgram();
             }
-            
+
         }
+
 
         //I.染色地址加载和染色池字典初始化
         //1.获取聚类的可疑地址(单公司版)
@@ -104,6 +141,72 @@ namespace BitcoinFlowAnalyzer
                 Console.WriteLine("可疑地址集合(suspectAddressCluster)为空!!!");
             }
             return suspectAddressCluster;
+        }
+
+        //2.获取聚类的可疑地址(给定DNAID单公司版)
+        public HashSet<string> loadSuspectAddressTodyingPoolingDicWithDNAID(string filePath, IDdatatype DNAID)
+        {
+            HashSet<string> suspectAddressCluster = null;
+            using (StreamReader sr = File.OpenText(filePath))
+            {
+                JsonSerializer jsonSerializer = new JsonSerializer();
+                suspectAddressCluster = jsonSerializer.Deserialize(sr, typeof(HashSet<string>)) as HashSet<string>;
+            }
+            if (suspectAddressCluster != null)
+            {
+                foreach (string suspectAddress in suspectAddressCluster)
+                {
+                    if (!dyingPoolingDic.ContainsKey(suspectAddress))
+                    {
+                        dyingPoolingDic.Add(suspectAddress, new Address_Class(true, DNAID));
+                    }
+                    else
+                    {
+                        Console.WriteLine("向染色池字典中重复添加了可疑地址!!!");
+                    }
+
+                }
+            }
+            else
+            {
+                Console.WriteLine("可疑地址集合(suspectAddressCluster)为空!!!");
+            }
+            return suspectAddressCluster;
+        }
+
+        //3.获取聚类的可疑地址(多公司版)
+        public HashSet<string> loadSuspectAddressTodyingPoolingDicFromMultiCompanies(string directoryPath) 
+        {
+            HashSet<string> totalSuspectAddressCluster = new HashSet<string>();
+            if (!Directory.Exists(directoryPath))
+            {
+                Console.WriteLine("地址加载文件加不存在!!!");
+                return null;
+            }
+            DirectoryInfo directoryInfo = new DirectoryInfo(directoryPath);
+            if (directoryInfo.GetFiles().Length != 0)
+            {
+                foreach (FileInfo fileInfo in directoryInfo.GetFiles())
+                {
+                    Console.WriteLine("正在加载文件:"+fileInfo.Name);
+                    string filePath = Path.Combine(directoryPath, fileInfo.Name);
+                    IDdatatype DNAID = Convert.ToInt32(fileInfo.Name.Split('-')[0]);
+                    HashSet<string> suspectAddressCluster=loadSuspectAddressTodyingPoolingDicWithDNAID(filePath,DNAID);
+                    Console.WriteLine("文件名:"+fileInfo.Name);
+                    Console.WriteLine("文件路径:"+filePath);
+                    Console.WriteLine("文件DNAID:"+DNAID);
+                    Console.WriteLine("地址数量:"+suspectAddressCluster.Count);
+                    totalSuspectAddressCluster.UnionWith(suspectAddressCluster);
+                    Console.WriteLine("**************************************");
+                }
+            }
+            else
+            {
+                Console.WriteLine("文件夹为空!!!");
+                return null;
+            }
+            Console.WriteLine();
+            return totalSuspectAddressCluster;
         }
 
         //II.交易追踪
@@ -1064,6 +1167,45 @@ namespace BitcoinFlowAnalyzer
                 serializer.Serialize(sw, dyingPoolingDicTest);
             }
             Console.WriteLine("结束！！！！");
+        }
+
+        public void extractMtGoxAddress(string MtGoxaddressFileFinalPath)
+        {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+            Console.WriteLine("正在数据库中查询数据......");
+            //1.修改1
+            string sqlConnectionString = "Data Source=DESKTOP-0B83G22\\SQL2016;Initial Catalog=BitcoinUTXOSlice;Integrated Security=True";
+            SqlConnection conn = new SqlConnection();
+            conn.ConnectionString = sqlConnectionString;
+            conn.Open();
+            //2.修改2
+            string sql = "SELECT TOP(540000) [address] FROM[BitcoinUTXOSlice].[dbo].[ClusterAddress]";
+            SqlDataAdapter data = new SqlDataAdapter(sql, conn);
+            data.SelectCommand.CommandTimeout = 0;            
+            DataSet dt = new DataSet();
+            data.Fill(dt, "MtGoxAddress");
+            DataTable datatable = dt.Tables["MtGoxaddress"];
+            HashSet<string> address = new HashSet<string>();
+            Console.WriteLine("共"+datatable.Rows.Count+"行");
+            Console.WriteLine("开始填充数据......");
+            foreach (DataRow dr in datatable.Rows)
+            {
+                //Console.WriteLine(dr[0].ToString());
+                address.Add(dr[0].ToString());
+            }
+            conn.Close();
+            string MtGoxaddress = Path.Combine(MtGoxaddressFileFinalPath, "MtGoxAddress.txt");
+            Console.WriteLine("开始保存数据......");
+            using (StreamWriter sw = File.CreateText(MtGoxaddress))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                serializer.Serialize(sw, address);
+            }
+            Console.WriteLine("数据提取结束!!!");
+            Console.WriteLine("共"+address.Count+"条数据!!!");
+            stopwatch.Stop();
+            Console.WriteLine("用时:"+stopwatch.Elapsed);
         }
     }
 }
